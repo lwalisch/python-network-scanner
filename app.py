@@ -1,9 +1,51 @@
+import subprocess
+import re
+
+INVALID_IP_ADRESSES = ["127.0.0.1", "172.17.0.1"]
 
 def app() :
-    print("hello world")
+
+
+
+    # execute "ifconfig" in shell
+    shell = subprocess.Popen(["ifconfig"], stdout=subprocess.PIPE)
+    shell_result = shell.stdout.read().decode("utf-8")
+
+    # execute a regex on ifconfig result to find all ip adresses
+    regex_result = re.findall(r'inet (?:addr){0,1}:((?:(?:\d){1,3}.){3}(?:\d){1,3})', shell_result)
+
+    # filter out invalid ip adresses
+    local_ips= list(filter(lambda ip_adress: ip_adress not in INVALID_IP_ADRESSES, regex_result))
+
+    # create a subnet mask according to the valid ips and try to ping each host in the subnet
+    network_hosts = []
+    for local_ip in local_ips:
+        subnet_mask = re.match(r'(?:[0-9]{1,3}\.){3}', local_ip).group(0)
+        for i in range(1, 255):
+            ip = subnet_mask + str(i)
+            shell = subprocess.Popen(["ping", ip, "-c", "1"], stdout=subprocess.PIPE)
+
+            try:
+                ping_result = shell.communicate(timeout=0.1)[0].decode("utf-8")
+                network_hosts.append(ip)
+            except:
+                pass
+            print(".")
+
+        print(network_hosts)
+
+        # for i in range(1,255):
+        #     ip = subnet_mask + i
+        #     shell = subprocess.Popen([ip, "-c", "1"])
+
+
+
+
+
 
 
 
 if __name__ == "__main__":
     app()
+
 
