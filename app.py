@@ -20,23 +20,20 @@ def app() :
 
     # create a subnet mask according to the valid ips and try to ping each host in the subnet
     network_hosts = []
-    counter = 0
-    printProgressBar(counter, 50, prefix = 'Progress:', suffix = 'Complete', length = 50)
     for local_ip in local_ips:
         subnet_mask = re.match(r'(?:[0-9]{1,3}\.){3}', local_ip).group(0)
+        printProgressBar(0, 254, prefix = 'Scanning Network:', length = 50)
         for i in range(1, 255):
             ip = subnet_mask + str(i)
             shell = subprocess.Popen(["ping", ip, "-c", "1"], stdout=subprocess.PIPE)
 
             try:
-                ping_result = shell.communicate(timeout=0.05)
+                ping_result = shell.communicate(timeout=0.15)
                 network_hosts.append(ip)
             except subprocess.TimeoutExpired:
                 pass
 
-            if i % 5 == 0:
-                counter += 1
-                printProgressBar(counter, 50, prefix = 'Scanning Network:', length = 50)
+            printProgressBar(i+1, 255, prefix = 'Scanning Network:', length = 50)
 
         print(network_hosts)
 
